@@ -37,8 +37,9 @@ def create_matrix(N=2, random=False):
     return a, b (ndarray, float32, with shape(N*N, 1)
     """
     if random == True:
-        a = np.random.randn(N, N).astype(np.float32)
-        b = np.random.randn(N, N).astype(np.float32) 
+        a = np.random.randn((N*N)).astype(np.float32)
+        b = np.random.randn((N*N)).astype(np.float32) 
+        c = np.zeros((N*N)).astype(np.float)
     else:
         a = np.array([x for x in range(N*N)]).astype(np.float32)
         b = np.array([x for x in range(N*N)]).astype(np.float32)
@@ -53,7 +54,7 @@ def matmul_cpu( a, b, alg = "auto" ):
      c = matmul(a, b, alg="auto")
      a, b, - array
      alg - режим вычисления
-     return c - ndarray, shape (N, N)
+     return c - ndarray, shape (N*N,)
     """
     if alg == "auto":
         c = a.reshape(N,N).dot(b.reshape(N, N))
