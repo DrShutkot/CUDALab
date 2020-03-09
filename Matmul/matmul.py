@@ -68,7 +68,7 @@ def matmul_cpu( a, b, alg = "auto" ):
     return c
 
 
-a, b, c_gpu = create_matrix(N)
+a, b, c_gpu = create_matrix(N, random = True)
 
 compil = compiler.SourceModule(kernel_code.substitute(N=N, BLOCK_SIZE=BLOCK_SIZE)) # конструктор
 matmul = compil.get_function("matmul") # добавляем функцию 
@@ -93,6 +93,17 @@ c = matmul_cpu(a, b, alg="b")
 end_cpu  = time.time()
 time_cpu = end_cpu - start_cpu
 print(f"Время работы CPU в ручном режиме: {time_cpu*1000}")
+
+"""
+#Не командный замер работы функций для матриц меньших размерностей и вычисления методом np.dot() (так как время сильно меньше секунды,
+#обычный модуль time не подходит
+import timeit
+start_cpu_n = timeit.default_timer()
+c = matmul_cpu(a, b)
+end_cpu_n  = timeit.default_timer()
+time_cpu_n = end_cpu_n - start_cpu_n
+print(f"Время работы CPU np.dot(): {time_cpu_n*1000}")
+"""
 
 #print(np.all(c, c_gpu)) #точное сравнение 
 print(np.allclose(c, c_gpu, 0.001)) # c допуском
