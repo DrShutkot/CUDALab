@@ -93,5 +93,5 @@ end_cpu  = time.time()
 time_cpu = end_cpu - start_cpu
 print(f"Время работы CPU в ручном режиме: {time_cpu*1000}")
 
-print(np.all(c, c_gpu)) #точное сравнение 
+#print(np.all(c, c_gpu)) #точное сравнение 
 print(np.allclose(c, c_gpu, 0.001)) # c допуском
