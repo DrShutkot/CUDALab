@@ -7,20 +7,32 @@ import random
 import string
 
 mod = SourceModule("""
-    __global__ void pi_gpu(int *H, int *n,   int *R, int *p)
+    __global__ void pi_gpu(int *H, int *H_len, int *N, int *n_len, int *n, int *R)
     {
+    
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idy = blockIdx.y * blockDim.y + threadIdx.y;
     int threadCount = gridDim.x * blockDim.x;
-    int N = 512;
-
-    for(int i = idx; i < N; i+=threadCount){
-    p++;
-    }
+    int threadCounty = gridDim.y * blockDim.y;
+     for(int j=idx; j<*n_len; j+=threadCount){
+       for (int i=idy; i<*H_len; i+=threadCounty){
+       int v = *n_len;
+       if (H[i]==n[j*v]){
+       int ix=n[j*v+1];
+       int iy=n[j*v+2];
+       int N_r = *N;
+       
+       R[ix*N_r+iy]--;
+       }
+       }
+       }
+    
     }
 """)
 
-H_len = 4096*1024
-N_len = 400
+
+H_len = 512
+N_len = 256
 N_min = 2
 N_max = 10
 
@@ -37,7 +49,6 @@ for x in range(N_len):
 R = np.zeros((N_len, H_len)).astype("int32")
 
 n = []
-print(len(set(H)))
 for x in set(H):
     for i, y in enumerate(N):
         for j, k in enumerate(y):
@@ -49,12 +60,26 @@ for i, n_len in enumerate(N):
     R[i] = len(n_len)
 H = np.array([ord(x) for x in H]).astype("int32")
 func = mod.get_function("pi_gpu")
-block_size = (256, 1, 1)
-grid_size = (int(256*256 / (128*block_size[0])), 1)
+block_size = (32, 1, 1)
+grid_size = (int(4096/ (128*block_size[0])), 1)
 start_gpu = time.time()
 qq = np.zeros(1).astype("int32")
+nn = np.zeros(1).astype("int32")*len(n)
+hh = np.zeros(1).astype("int32")*H_len
 
-#func(cuda.InOut(H), cuda.InOut(m),  cuda.InOut(R), cuda.Out(qq),  block=block_size, grid=grid_size)
+Hh = H.flatten()
+Mm = m.flatten()
+Rr = R.flatten()
+Nn = np.zeros(1).astype("int32").flatten()*N_len
+point = np.zeros(1).astype("int32")
+start = time.time()
+func(cuda.InOut(Hh), cuda.InOut(hh), cuda.InOut(Nn), cuda.InOut(nn), cuda.InOut(Mm), cuda.InOut(Rr),
+     block=block_size, grid=grid_size)
+cuda.Context.synchronize()
+end = time.time()
+print("GPU")
+time.sleep(0.1)
+print((end-start)*1000)
 #H = np.array([ord(x) for x in H]).astype("int32")
 
 def masssearch():
