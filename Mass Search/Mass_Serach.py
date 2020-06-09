@@ -6,30 +6,6 @@ import time
 import random
 import string
 
-mod = SourceModule("""
-    __global__ void pi_gpu(int *H, int *H_len, int *N, int *n_len, int *n, int *R)
-    {
-    
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int idy = blockIdx.y * blockDim.y + threadIdx.y;
-    int threadCount = gridDim.x * blockDim.x;
-    int threadCounty = gridDim.y * blockDim.y;
-     for(int j=idx; j<*n_len; j+=threadCount){
-       for (int i=idy; i<*H_len; i+=threadCounty){
-       int v = *n_len;
-       if (H[i]==n[j*v]){
-       int ix=n[j*v+1];
-       int iy=n[j*v+2];
-       int N_r = *N;
-       
-       R[ix*N_r+iy]--;
-       }
-       }
-       }
-    
-    }
-""")
-
 
 H_len = 512
 N_len = 256
@@ -72,6 +48,30 @@ Mm = m.flatten()
 Rr = R.flatten()
 Nn = np.zeros(1).astype("int32").flatten()*N_len
 point = np.zeros(1).astype("int32")
+mod = SourceModule("""
+    __global__ void pi_gpu(int *H, int *H_len, int *N, int *n_len, int *n, int *R)
+    {
+    
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idy = blockIdx.y * blockDim.y + threadIdx.y;
+     for(int j=idx; j<*n_len; j++){
+       for (int i=idy; i<*H_len; i++){
+       int v = *n_len;
+       if (H[i]==n[j*v]){
+       int ix=n[j*v+1];
+       int iy=n[j*v+2];
+       int N_r = *N;
+       
+       R[ix*N_r+iy]--; # вычитаем, если совпало
+       }
+       }
+       }
+    
+    }
+""")
+
+
+
 start = time.time()
 func(cuda.InOut(Hh), cuda.InOut(hh), cuda.InOut(Nn), cuda.InOut(nn), cuda.InOut(Mm), cuda.InOut(Rr),
      block=block_size, grid=grid_size)
