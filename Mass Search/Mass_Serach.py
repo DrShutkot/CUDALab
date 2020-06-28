@@ -1,8 +1,5 @@
 import numpy as np
 from numba import cuda
-import pycuda.driver as cuda
-import pycuda.autoinit
-from pycuda.compiler import SourceModule
 import time
 import random
 import string
@@ -29,9 +26,9 @@ def buildblock(size):
 # H = buildblock(H_len)
 H = "abc"
 N = ['ab', 'bc']
-# N = []
-# for x in range(N_len):
-# N.append(buildblock(random.randint(N_min, N_max)))
+ # N = []
+ # for x in range(N_len):
+ #   N.append(buildblock(random.randint(N_min, N_max)))
 print("H")
 print(H)
 print("N")
@@ -50,10 +47,8 @@ for i, n_len in enumerate(N):
     R[i] = len(n_len)
 H = np.array([ord(x) for x in H]).astype("int32")
 #func = mod.get_function("pi_gpu")
-#block_size = (2, 3, 1)
-#grid_size = (5, 1)
-#start_gpu = time.time()
-#qq = np.zeros(1).astype("int32")
+blockspergrid = (16,16)
+threadsperblock = (16,16)
 
 H_cuda = H.copy()
 R_cuda = R.copy()
@@ -61,17 +56,8 @@ n_cuda = m.copy()
 
 # start = time.time()
 g = np.int32(2)
-#func(cuda.InOut(R),
-     #cuda.InOut(Hh),
-     #cuda.InOut(m),
-     #cuda.InOut(N_len_gpu),
-     #cuda.InOut(n_len),
-     #grid =grid_size,
-     #block=block_size)
-#cuda.Context.synchronize()
-#print("dvfbfgbghbghbghbb")
 start = time.time()
-mass_earch(R_cuda, H_cuda, n_cuda)
+mass_earch[blockspergrid, threadsperblock](R_cuda, H_cuda, n_cuda)
 end = time.time()
 print(f"Cuda time = {end-s}")
 print(f"R CUda {R_cuda}")
@@ -79,11 +65,6 @@ print(f"R CUda {R_cuda}")
 print(f"R {R}")
 
 
-# end = time.time()
-# print("GPU")
-# time.sleep(0.1)
-# print((end-start)*1000)
-# H = np.array([ord(x) for x in H]).astype("int32")
 
 def masssearch():
     for i, x in enumerate(H):
