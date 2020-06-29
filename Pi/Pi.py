@@ -31,8 +31,9 @@ mod = SourceModule("""
                    )
 
 func = mod.get_function("pi_gpu")
+th_c = 256
 block_size = (512, 1, 1)
-grid_size = (int(N*N //(block_size[0])), 1)
+grid_size = (int(N*N //(th_c * block_size[0])), 1)
 start_gpu = time.time()
 func(cuda.InOut(x), cuda.InOut(y), cuda.Out(point),  block=block_size, grid=grid_size)
 cuda.Context.synchronize()
