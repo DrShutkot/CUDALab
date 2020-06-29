@@ -3,6 +3,7 @@ from pycuda import driver, compiler, gpuarray, tools
 import pycuda.autoinit
 from string import Template
 import time
+from numba import cuda
 
 kernel_code = Template("""
 __global__ void matmul(float* a, float* b, float* c)
@@ -86,6 +87,28 @@ stop.record()
 stop.synchronize()
 time_g = stop.time_since(start)
 print(f"Время работы GPU:{time_g}")
+
+
+@jit.cuda
+def matmul_numba(A, B, C):
+    x, y = cuda.grid(2)
+    if x < C.shape[0] and y < C.shape[1]:
+        value = 0
+        for i in range(A.shape[1]):
+            value += A[x, k] * B[k, y]
+        C[x, y] = value
+
+a_n, b_n, c_gpu_n = create_matrix(N, random = True)
+# strean = cuda.stream()
+#a_gpu_n = cuda.to_device(a_n, stream=stream)
+#b_gpu_n = cuda.to_device(b_n, stream=stream)
+#c_gpu_numba = cuda.to_device(c_gpu_n, stream=stream)
+thread = (32, 32)
+grid = (N//32, N//32)
+#matmul_numba[thread, grid, stream](a_n, b_n, c_gpu_n)
+matmul_numba[thread, grid](a_n, b_n, c_gpu_n)
+#c_gpu_numba.copy_to_host(c_gpu_n, stream=stream)
+#stream.synchronize()  # or with stream/auto_synchronize() and with as context
 
 
 start_cpu = time.time()
