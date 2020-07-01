@@ -6,6 +6,7 @@ import string
 
 @cuda.jit
 def mass_earch(R, H, N):
+    #x = cuda.grid(1)
     x, y = cuda.grid(2)
     for k in range(N.shape[0]):
         if x<H.shape[0] and N[k][0]==H[x]:
@@ -46,7 +47,8 @@ m = np.array(n)
 for i, n_len in enumerate(N):
     R[i] = len(n_len)
 H = np.array([ord(x) for x in H]).astype("int32")
-#func = mod.get_function("pi_gpu")
+#threadsperblock  = 64
+#blockspergrid = H/64 # H>64
 blockspergrid = (16,16)
 threadsperblock = (16,16)
 
@@ -63,7 +65,7 @@ print(f"Cuda time = {end-s}")
 print(f"R CUda {R_cuda}")
 
 print(f"R {R}")
-
+print(f"R_cuda_res {R_cuda}")
 
 
 def masssearch():
@@ -81,3 +83,9 @@ print(new_R)
 time.sleep(0.1)
 end = time.time()
 print((end - start) * 1000)
+
+res_1 = np.where(new_R==0)
+res_2 = np.where(R_cuda==0)
+print(list(zip(res_1[0], res_1[1])))
+print("_____________")
+print(list(zip(res_2[0], res_2[1])))
